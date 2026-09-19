@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,4 +39,63 @@
 
   <script src="game.js"></script>
 </body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stickman Trap Room</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="game-container">
+
+  <header>
+    <h1>Stickman Trap Room</h1>
+
+    <div class="stats">
+      <span>Level: <b id="level">1</b></span>
+      <span>Score: <b id="score">0</b></span>
+      <span>Lives: <b id="lives">❤️❤️❤️</b></span>
+    </div>
+  </header>
+
+  <div class="game-wrapper">
+
+    <canvas id="gameCanvas" width="900" height="500"></canvas>
+
+    <div id="message" class="message hidden">
+      <h2 id="messageTitle">Game Over</h2>
+      <p id="messageText"></p>
+      <button id="actionButton">Restart</button>
+    </div>
+
+  </div>
+
+  <div class="mobile-controls">
+
+    <div class="movement-controls">
+      <button id="leftBtn">◀</button>
+      <button id="rightBtn">▶</button>
+    </div>
+
+    <button id="jumpBtn">JUMP</button>
+
+  </div>
+
+  <div class="controls">
+    <p><b>A / ←</b> Left</p>
+    <p><b>D / →</b> Right</p>
+    <p><b>W / ↑ / Space</b> Jump</p>
+    <p><b>R</b> Restart</p>
+  </div>
+
+</div>
+
+<script src="game.js"></script>
+
+</body>
+>>>>>>> 873b6dc (Initial Stickman Trap Room game)
 </html>
