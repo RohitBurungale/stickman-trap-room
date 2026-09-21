@@ -1,101 +1,427 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <meta
+    name="description"
+    content="Stickman Trap Room - survive deadly traps, collect coins and keys, and escape each level."
+  >
+
+  <meta
+    name="theme-color"
+    content="#0f172a"
+  >
+
   <title>Stickman Trap Room</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-  <div class="game-container">
-    <header>
-      <h1>Stickman Trap Room</h1>
+  <main class="game-container">
+
+    <!-- =====================================
+         HEADER / GAME HUD
+    ====================================== -->
+
+    <header class="game-header">
+
+      <div class="brand">
+
+        <h1>Stickman Trap Room</h1>
+
+        <p>
+          Survive the traps. Collect everything. Escape.
+        </p>
+
+      </div>
+
+
+      <!-- GAME STATS -->
 
       <div class="stats">
-        <span>Level: <b id="level">1</b></span>
-        <span>Lives: <b id="lives">❤️❤️❤️</b></span>
+
+        <div class="stat-card">
+
+          <span class="stat-label">
+            LEVEL
+          </span>
+
+          <strong id="level">
+            1
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span class="stat-label">
+            SCORE
+          </span>
+
+          <strong id="score">
+            0
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span class="stat-label">
+            LIVES
+          </span>
+
+          <strong id="lives">
+            ❤️❤️❤️
+          </strong>
+
+        </div>
+
       </div>
+
     </header>
 
-    <div class="game-wrapper">
-      <canvas id="gameCanvas" width="900" height="500"></canvas>
 
-      <div id="message" class="message hidden">
-        <h2 id="messageTitle">Game Over</h2>
-        <p id="messageText"></p>
-        <button id="actionButton">Restart</button>
+    <!-- =====================================
+         GAME AREA
+    ====================================== -->
+
+    <section class="game-wrapper">
+
+      <canvas
+        id="gameCanvas"
+        width="900"
+        height="500"
+        aria-label="Stickman Trap Room game"
+      ></canvas>
+
+
+      <!-- =====================================
+           GAME MESSAGE
+      ====================================== -->
+
+      <div
+        id="message"
+        class="message hidden"
+        role="dialog"
+        aria-modal="true"
+      >
+
+        <div class="message-panel">
+
+          <div
+            id="messageIcon"
+            class="message-icon"
+          >
+            ⚠️
+          </div>
+
+
+          <h2 id="messageTitle">
+            Game Over
+          </h2>
+
+
+          <p id="messageText">
+            You didn't make it out.
+          </p>
+
+
+          <!-- STARS -->
+
+          <div
+            id="messageStars"
+            class="message-stars"
+            aria-label="Level stars"
+          >
+            ☆ ☆ ☆
+          </div>
+
+
+          <!-- ACTION BUTTON -->
+
+          <button
+            id="actionButton"
+            class="primary-button"
+            type="button"
+          >
+            Restart
+          </button>
+
+        </div>
+
       </div>
-    </div>
 
-    <div class="controls">
-      <p><b>A / ←</b> Move Left</p>
-      <p><b>D / →</b> Move Right</p>
-      <p><b>W / ↑ / Space</b> Jump</p>
-      <p><b>R</b> Restart</p>
-    </div>
-  </div>
+
+      <!-- =====================================
+           PAUSE OVERLAY
+      ====================================== -->
+
+      <div
+        id="pauseOverlay"
+        class="pause-overlay hidden"
+      >
+
+        <div class="pause-panel">
+
+          <div class="pause-icon">
+            ⏸
+          </div>
+
+
+          <h2>
+            Game Paused
+          </h2>
+
+
+          <p>
+            Press
+            <b>ESC</b>
+            or
+            <b>P</b>
+            to continue.
+          </p>
+
+
+          <button
+            id="resumeButton"
+            class="primary-button"
+            type="button"
+          >
+            Resume
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================
+         MOBILE CONTROLS
+    ====================================== -->
+
+    <section
+      class="mobile-controls"
+      aria-label="Mobile game controls"
+    >
+
+      <div class="movement-controls">
+
+        <button
+          id="leftBtn"
+          class="control-button"
+          type="button"
+          aria-label="Move left"
+        >
+          ◀
+        </button>
+
+
+        <button
+          id="rightBtn"
+          class="control-button"
+          type="button"
+          aria-label="Move right"
+        >
+          ▶
+        </button>
+
+      </div>
+
+
+      <button
+        id="jumpBtn"
+        class="jump-button"
+        type="button"
+        aria-label="Jump"
+      >
+        JUMP
+      </button>
+
+    </section>
+
+
+    <!-- =====================================
+         DESKTOP CONTROLS
+    ====================================== -->
+
+    <section class="controls">
+
+      <div class="control-item">
+
+        <kbd>A</kbd>
+        <kbd>←</kbd>
+
+        <span>
+          Move Left
+        </span>
+
+      </div>
+
+
+      <div class="control-item">
+
+        <kbd>D</kbd>
+        <kbd>→</kbd>
+
+        <span>
+          Move Right
+        </span>
+
+      </div>
+
+
+      <div class="control-item">
+
+        <kbd>W</kbd>
+        <kbd>↑</kbd>
+        <kbd>SPACE</kbd>
+
+        <span>
+          Jump
+        </span>
+
+      </div>
+
+
+      <div class="control-item">
+
+        <kbd>R</kbd>
+
+        <span>
+          Restart
+        </span>
+
+      </div>
+
+
+      <div class="control-item">
+
+        <kbd>ESC</kbd>
+        <kbd>P</kbd>
+
+        <span>
+          Pause
+        </span>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================
+         GAME LEGEND
+    ====================================== -->
+
+    <section class="game-legend">
+
+      <div class="legend-item">
+
+        <span class="legend-icon danger">
+          ⚠
+        </span>
+
+        <span>
+          Avoid traps
+        </span>
+
+      </div>
+
+
+      <div class="legend-item">
+
+        <span class="legend-icon">
+          🔑
+        </span>
+
+        <span>
+          Collect keys
+        </span>
+
+      </div>
+
+
+      <div class="legend-item">
+
+        <span class="legend-icon">
+          🪙
+        </span>
+
+        <span>
+          Collect coins
+        </span>
+
+      </div>
+
+
+      <div class="legend-item">
+
+        <span class="legend-icon">
+          🔘
+        </span>
+
+        <span>
+          Activate buttons
+        </span>
+
+      </div>
+
+
+      <div class="legend-item">
+
+        <span class="legend-icon">
+          🚪
+        </span>
+
+        <span>
+          Reach the exit
+        </span>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================
+         FOOTER
+    ====================================== -->
+
+    <footer class="game-footer">
+
+      <span>
+        Stickman Trap Room
+      </span>
+
+      <span class="footer-dot">
+        •
+      </span>
+
+      <span>
+        Survive. Escape. Repeat.
+      </span>
+
+    </footer>
+
+  </main>
+
+
+  <!-- =====================================
+       GAME JAVASCRIPT
+  ====================================== -->
 
   <script src="game.js"></script>
-</body>
-=======
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stickman Trap Room</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<div class="game-container">
-
-  <header>
-    <h1>Stickman Trap Room</h1>
-
-    <div class="stats">
-      <span>Level: <b id="level">1</b></span>
-      <span>Score: <b id="score">0</b></span>
-      <span>Lives: <b id="lives">❤️❤️❤️</b></span>
-    </div>
-  </header>
-
-  <div class="game-wrapper">
-
-    <canvas id="gameCanvas" width="900" height="500"></canvas>
-
-    <div id="message" class="message hidden">
-      <h2 id="messageTitle">Game Over</h2>
-      <p id="messageText"></p>
-      <button id="actionButton">Restart</button>
-    </div>
-
-  </div>
-
-  <div class="mobile-controls">
-
-    <div class="movement-controls">
-      <button id="leftBtn">◀</button>
-      <button id="rightBtn">▶</button>
-    </div>
-
-    <button id="jumpBtn">JUMP</button>
-
-  </div>
-
-  <div class="controls">
-    <p><b>A / ←</b> Left</p>
-    <p><b>D / →</b> Right</p>
-    <p><b>W / ↑ / Space</b> Jump</p>
-    <p><b>R</b> Restart</p>
-  </div>
-
-</div>
-
-<script src="game.js"></script>
 
 </body>
->>>>>>> 873b6dc (Initial Stickman Trap Room game)
 </html>

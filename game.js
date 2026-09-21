@@ -1,562 +1,121 @@
-<<<<<<< HEAD
+/* =========================================================
+   STICKMAN TRAP ROOM
+   Updated Game Engine
+========================================================= */
+
+"use strict";
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const levelDisplay = document.getElementById("level");
-const livesDisplay = document.getElementById("lives");
 
-const message = document.getElementById("message");
-const messageTitle = document.getElementById("messageTitle");
-const messageText = document.getElementById("messageText");
-const actionButton = document.getElementById("actionButton");
-
-const keys = {};
-
-let gameRunning = true;
-let currentLevel = 1;
-let lives = 3;
-
-const gravity = 0.7;
-const groundY = 450;
-
-const player = {
-  x: 70,
-  y: 380,
-  width: 28,
-  height: 60,
-
-  velocityX: 0,
-  velocityY: 0,
-
-  speed: 4,
-  jumpPower: -13,
-
-  onGround: false
-};
-
-let buttonPressed = false;
-
-const levels = [
-  {
-    spikes: [
-      { x: 350, y: 430, width: 80, height: 20 }
-    ],
-
-    button: {
-      x: 220,
-      y: 415,
-      width: 30,
-      height: 35
-    },
-
-    exit: {
-      x: 800,
-      y: 370,
-      width: 45,
-      height: 80
-    }
-  },
-
-  {
-    spikes: [
-      { x: 300, y: 430, width: 100, height: 20 },
-      { x: 550, y: 430, width: 100, height: 20 }
-    ],
-
-    button: {
-      x: 450,
-      y: 415,
-      width: 30,
-      height: 35
-    },
-
-    exit: {
-      x: 800,
-      y: 370,
-      width: 45,
-      height: 80
-    }
-  },
-
-  {
-    spikes: [
-      { x: 250, y: 430, width: 90, height: 20 },
-      { x: 500, y: 430, width: 120, height: 20 }
-    ],
-
-    button: {
-      x: 180,
-      y: 415,
-      width: 30,
-      height: 35
-    },
-
-    exit: {
-      x: 800,
-      y: 370,
-      width: 45,
-      height: 80
-    }
-  }
-];
-
-function getLevel() {
-  return levels[currentLevel - 1];
-}
-
-function resetPlayer() {
-  player.x = 70;
-  player.y = 380;
-  player.velocityX = 0;
-  player.velocityY = 0;
-}
-
-function resetLevel() {
-  resetPlayer();
-  buttonPressed = false;
-  gameRunning = true;
-
-  hideMessage();
-  updateUI();
-}
-
-function updateUI() {
-  levelDisplay.textContent = currentLevel;
-
-  let hearts = "";
-
-  for (let i = 0; i < lives; i++) {
-    hearts += "❤️";
-  }
-
-  livesDisplay.textContent = hearts || "💀";
-}
-
-function showMessage(title, text, buttonText = "Restart") {
-  messageTitle.textContent = title;
-  messageText.textContent = text;
-  actionButton.textContent = buttonText;
-
-  message.classList.remove("hidden");
-}
-
-function hideMessage() {
-  message.classList.add("hidden");
-}
-
-function restartGame() {
-  currentLevel = 1;
-  lives = 3;
-
-  resetLevel();
-}
-
-function loseLife() {
-  lives--;
-
-  updateUI();
-
-  if (lives <= 0) {
-    gameRunning = false;
-
-    showMessage(
-      "GAME OVER",
-      "You ran out of lives!",
-      "Restart Game"
-    );
-
-    return;
-  }
-
-  resetPlayer();
-}
-
-function nextLevel() {
-  if (currentLevel < levels.length) {
-    currentLevel++;
-
-    resetLevel();
-  } else {
-    gameRunning = false;
-
-    showMessage(
-      "YOU WIN!",
-      "You completed all levels!",
-      "Play Again"
-    );
-  }
-}
-
-function isColliding(a, b) {
-  return (
-    a.x < b.x + b.width &&
-    a.x + a.width > b.x &&
-    a.y < b.y + b.height &&
-    a.y + a.height > b.y
-  );
-}
-
-function handleInput() {
-  player.velocityX = 0;
-
-  if (keys["ArrowLeft"] || keys["a"]) {
-    player.velocityX = -player.speed;
-  }
-
-  if (keys["ArrowRight"] || keys["d"]) {
-    player.velocityX = player.speed;
-  }
-
-  if (
-    (keys["ArrowUp"] ||
-      keys["w"] ||
-      keys[" "]) &&
-    player.onGround
-  ) {
-    player.velocityY = player.jumpPower;
-    player.onGround = false;
-  }
-}
-
-function updatePlayer() {
-  handleInput();
-
-  player.velocityY += gravity;
-
-  player.x += player.velocityX;
-  player.y += player.velocityY;
-
-  // Screen boundaries
-  if (player.x < 0) {
-    player.x = 0;
-  }
-
-  if (player.x + player.width > canvas.width) {
-    player.x = canvas.width - player.width;
-  }
-
-  // Ground collision
-  if (player.y + player.height >= groundY) {
-    player.y = groundY - player.height;
-    player.velocityY = 0;
-    player.onGround = true;
-  }
-}
-
-function updateButton() {
-  const level = getLevel();
-
-  if (isColliding(player, level.button)) {
-    buttonPressed = true;
-  }
-}
-
-function checkSpikes() {
-  const level = getLevel();
-
-  if (buttonPressed) {
-    return;
-  }
-
-  for (const spike of level.spikes) {
-    const hitbox = {
-      x: spike.x,
-      y: spike.y,
-      width: spike.width,
-      height: spike.height
-    };
-
-    if (isColliding(player, hitbox)) {
-      loseLife();
-      break;
-    }
-  }
-}
-
-function checkExit() {
-  const level = getLevel();
-
-  if (!buttonPressed) {
-    return;
-  }
-
-  if (isColliding(player, level.exit)) {
-    nextLevel();
-  }
-}
-
-function update() {
-  if (!gameRunning) {
-    return;
-  }
-
-  updatePlayer();
-  updateButton();
-  checkSpikes();
-  checkExit();
-}
-
-function drawBackground() {
-  ctx.fillStyle = "#dbeafe";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Background walls
-  ctx.fillStyle = "#cbd5e1";
-  ctx.fillRect(0, 0, canvas.width, 25);
-
-  ctx.fillStyle = "#94a3b8";
-  ctx.fillRect(0, 25, 20, 425);
-
-  ctx.fillRect(canvas.width - 20, 25, 20, 425);
-}
-
-function drawGround() {
-  ctx.fillStyle = "#374151";
-  ctx.fillRect(0, groundY, canvas.width, 50);
-
-  ctx.fillStyle = "#6b7280";
-
-  for (let x = 0; x < canvas.width; x += 40) {
-    ctx.fillRect(x, groundY, 2, 50);
-  }
-}
-
-function drawPlayer() {
-  const centerX = player.x + player.width / 2;
-
-  ctx.strokeStyle = "#111827";
-  ctx.fillStyle = "#111827";
-  ctx.lineWidth = 5;
-  ctx.lineCap = "round";
-
-  // Head
-  ctx.beginPath();
-  ctx.arc(centerX, player.y + 10, 9, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Body
-  ctx.beginPath();
-  ctx.moveTo(centerX, player.y + 20);
-  ctx.lineTo(centerX, player.y + 42);
-  ctx.stroke();
-
-  // Arms
-  ctx.beginPath();
-  ctx.moveTo(centerX, player.y + 25);
-  ctx.lineTo(centerX - 15, player.y + 35);
-
-  ctx.moveTo(centerX, player.y + 25);
-  ctx.lineTo(centerX + 15, player.y + 35);
-
-  ctx.stroke();
-
-  // Legs
-  ctx.beginPath();
-  ctx.moveTo(centerX, player.y + 42);
-  ctx.lineTo(centerX - 12, player.y + 58);
-
-  ctx.moveTo(centerX, player.y + 42);
-  ctx.lineTo(centerX + 12, player.y + 58);
-
-  ctx.stroke();
-}
-
-function drawSpikes() {
-  const level = getLevel();
-
-  if (buttonPressed) {
-    return;
-  }
-
-  ctx.fillStyle = "#dc2626";
-
-  for (const spike of level.spikes) {
-    const spikeCount = Math.floor(spike.width / 20);
-
-    for (let i = 0; i < spikeCount; i++) {
-      const x = spike.x + i * 20;
-
-      ctx.beginPath();
-
-      ctx.moveTo(x, spike.y + spike.height);
-      ctx.lineTo(x + 10, spike.y);
-      ctx.lineTo(x + 20, spike.y + spike.height);
-
-      ctx.closePath();
-      ctx.fill();
-    }
-  }
-}
-
-function drawButton() {
-  const level = getLevel();
-
-  ctx.fillStyle = buttonPressed
-    ? "#22c55e"
-    : "#ef4444";
-
-  ctx.fillRect(
-    level.button.x,
-    level.button.y,
-    level.button.width,
-    level.button.height
-  );
-
-  ctx.fillStyle = "#111827";
-  ctx.font = "bold 14px Arial";
-
-  ctx.fillText(
-    buttonPressed ? "ON" : "OFF",
-    level.button.x - 1,
-    level.button.y - 8
-  );
-}
-
-function drawExit() {
-  const level = getLevel();
-
-  ctx.fillStyle = buttonPressed
-    ? "#22c55e"
-    : "#64748b";
-
-  ctx.fillRect(
-    level.exit.x,
-    level.exit.y,
-    level.exit.width,
-    level.exit.height
-  );
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 14px Arial";
-
-  ctx.fillText(
-    buttonPressed ? "EXIT" : "LOCK",
-    level.exit.x - 3,
-    level.exit.y - 10
-  );
-}
-
-function drawLevelText() {
-  ctx.fillStyle = "#111827";
-  ctx.font = "bold 22px Arial";
-
-  ctx.fillText(
-    `ROOM ${currentLevel}`,
-    40,
-    65
-  );
-
-  ctx.font = "16px Arial";
-
-  if (!buttonPressed) {
-    ctx.fillText(
-      "Press the button to disable the spikes!",
-      40,
-      90
-    );
-  } else {
-    ctx.fillText(
-      "The exit is unlocked!",
-      40,
-      90
-    );
-  }
-}
-
-function draw() {
-  ctx.clearRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-  drawBackground();
-  drawGround();
-  drawLevelText();
-  drawSpikes();
-  drawButton();
-  drawExit();
-  drawPlayer();
-}
-
-function gameLoop() {
-  update();
-  draw();
-
-  requestAnimationFrame(gameLoop);
-}
-
-document.addEventListener("keydown", (event) => {
-  keys[event.key] = true;
-
-  if (
-    event.key === " " ||
-    event.key === "ArrowUp" ||
-    event.key === "ArrowDown" ||
-    event.key === "ArrowLeft" ||
-    event.key === "ArrowRight"
-  ) {
-    event.preventDefault();
-  }
-
-  if (event.key.toLowerCase() === "r") {
-    resetLevel();
-  }
-});
-
-document.addEventListener("keyup", (event) => {
-  keys[event.key] = false;
-});
-
-actionButton.addEventListener("click", () => {
-  if (lives <= 0 || currentLevel >= levels.length) {
-    restartGame();
-  } else {
-    resetLevel();
-  }
-});
-
-updateUI();
-gameLoop();
-=======
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+/* =========================================================
+   UI ELEMENTS
+========================================================= */
 
 const levelDisplay = document.getElementById("level");
 const scoreDisplay = document.getElementById("score");
 const livesDisplay = document.getElementById("lives");
 
 const message = document.getElementById("message");
+const messageIcon = document.getElementById("messageIcon");
 const messageTitle = document.getElementById("messageTitle");
 const messageText = document.getElementById("messageText");
+const messageStars = document.getElementById("messageStars");
 const actionButton = document.getElementById("actionButton");
+
+const pauseOverlay = document.getElementById("pauseOverlay");
+const resumeButton = document.getElementById("resumeButton");
+
+const leftBtn = document.getElementById("leftBtn");
+const rightBtn = document.getElementById("rightBtn");
+const jumpBtn = document.getElementById("jumpBtn");
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
 
 const keys = {};
 
-const gravity = 0.7;
-const groundY = 450;
-
 let gameRunning = true;
+let paused = false;
+
 let currentLevel = 1;
 let score = 0;
 let lives = 3;
 
 let levelData = null;
+
 let levelStartTime = 0;
 let timeLimit = 0;
 
 let buttonPressed = 0;
 let collectedKeys = 0;
 
+let levelDamaged = false;
 
-// =====================================================
-// PLAYER
-// =====================================================
+let lastTime = 0;
+
+let damageCooldown = 0;
+
+let screenShake = 0;
+
+let levelTransition = 0;
+
+
+/* =========================================================
+   WORLD
+========================================================= */
+
+const WORLD = {
+    width: 900,
+    height: 500,
+    groundY: 450,
+
+    leftWall: 20,
+    rightWall: 880
+};
+
+
+/* =========================================================
+   PHYSICS
+========================================================= */
+
+const PHYSICS = {
+
+    gravity: 1800,
+
+    moveSpeed: 280,
+
+    acceleration: 1800,
+
+    friction: 2200,
+
+    jumpPower: 650,
+
+    maxFallSpeed: 900,
+
+    coyoteTime: 0.12,
+
+    jumpBufferTime: 0.12
+
+};
+
+
+/* =========================================================
+   PLAYER
+========================================================= */
 
 const player = {
+
     x: 60,
-    y: 380,
+    y: 390,
 
     width: 28,
     height: 60,
@@ -564,16 +123,25 @@ const player = {
     velocityX: 0,
     velocityY: 0,
 
-    speed: 4,
-    jumpPower: -13,
+    onGround: false,
 
-    onGround: false
+    facing: 1,
+
+    coyoteTimer: 0,
+
+    jumpBufferTimer: 0,
+
+    invincible: 0,
+
+    animationTime: 0,
+
+    state: "idle"
 };
 
 
-// =====================================================
-// DIFFICULTY
-// =====================================================
+/* =========================================================
+   DIFFICULTY
+========================================================= */
 
 function getDifficulty(level) {
 
@@ -679,9 +247,9 @@ function getDifficultySettings(level) {
 }
 
 
-// =====================================================
-// RANDOM
-// =====================================================
+/* =========================================================
+   RANDOM
+========================================================= */
 
 function random(min, max) {
 
@@ -697,9 +265,9 @@ function randomFloat(min, max) {
 }
 
 
-// =====================================================
-// COLLISION
-// =====================================================
+/* =========================================================
+   COLLISION
+========================================================= */
 
 function isColliding(a, b) {
 
@@ -712,13 +280,42 @@ function isColliding(a, b) {
 }
 
 
-// =====================================================
-// SAFE RANDOM POSITION
-// =====================================================
+/* =========================================================
+   PLAYER HITBOX
+========================================================= */
+
+function getPlayerHitbox() {
+
+    return {
+
+        x: player.x + 5,
+
+        y: player.y + 5,
+
+        width: player.width - 10,
+
+        height: player.height - 5
+
+    };
+}
+
+
+function collidesWithPlayer(object) {
+
+    return isColliding(
+        getPlayerHitbox(),
+        object
+    );
+}
+
+
+/* =========================================================
+   SAFE POSITION
+========================================================= */
 
 function safeX(existingObjects, min = 130, max = 760) {
 
-    for (let attempt = 0; attempt < 50; attempt++) {
+    for (let attempt = 0; attempt < 60; attempt++) {
 
         const x = random(min, max);
 
@@ -727,8 +324,9 @@ function safeX(existingObjects, min = 130, max = 760) {
         for (const obj of existingObjects) {
 
             if (
-                Math.abs(x - obj.x) < 80
+                Math.abs(x - obj.x) < 85
             ) {
+
                 safe = false;
                 break;
             }
@@ -743,9 +341,9 @@ function safeX(existingObjects, min = 130, max = 760) {
 }
 
 
-// =====================================================
-// LEVEL GENERATOR
-// =====================================================
+/* =========================================================
+   LEVEL GENERATION
+========================================================= */
 
 function generateLevel(level) {
 
@@ -754,20 +352,31 @@ function generateLevel(level) {
 
     const data = {
 
-        difficulty: getDifficulty(level),
+        difficulty:
+            getDifficulty(level),
 
         spikes: [],
+
         movingSpikes: [],
+
         fire: [],
+
         rocks: [],
+
         buttons: [],
+
         keys: [],
+
         coins: [],
 
         exit: {
+
             x: 815,
+
             y: 365,
+
             width: 45,
+
             height: 85
         }
 
@@ -777,9 +386,7 @@ function generateLevel(level) {
     const occupied = [];
 
 
-    // -------------------------------------------------
-    // BUTTONS
-    // -------------------------------------------------
+    /* BUTTONS */
 
     for (
         let i = 0;
@@ -788,11 +395,15 @@ function generateLevel(level) {
     ) {
 
         const x =
-            safeX(occupied, 130, 650);
+            safeX(
+                occupied,
+                150,
+                650
+            );
 
         const button = {
 
-            x: x,
+            x,
 
             y: 415,
 
@@ -800,7 +411,9 @@ function generateLevel(level) {
 
             height: 35,
 
-            pressed: false
+            pressed: false,
+
+            pulse: 0
 
         };
 
@@ -810,9 +423,7 @@ function generateLevel(level) {
     }
 
 
-    // -------------------------------------------------
-    // SPIKES
-    // -------------------------------------------------
+    /* SPIKES */
 
     for (
         let i = 0;
@@ -821,11 +432,15 @@ function generateLevel(level) {
     ) {
 
         const x =
-            safeX(occupied, 180, 760);
+            safeX(
+                occupied,
+                180,
+                760
+            );
 
         const spike = {
 
-            x: x,
+            x,
 
             y: 430,
 
@@ -833,7 +448,9 @@ function generateLevel(level) {
 
             height: 20,
 
-            active: true
+            active: true,
+
+            animation: randomFloat(0, Math.PI * 2)
 
         };
 
@@ -843,9 +460,7 @@ function generateLevel(level) {
     }
 
 
-    // -------------------------------------------------
-    // MOVING SPIKES
-    // -------------------------------------------------
+    /* MOVING SPIKES */
 
     for (
         let i = 0;
@@ -854,17 +469,27 @@ function generateLevel(level) {
     ) {
 
         const x =
-            safeX(occupied, 250, 700);
+            safeX(
+                occupied,
+                250,
+                700
+            );
 
         const movingSpike = {
 
-            x: x,
+            x,
 
             startX: x,
 
-            minX: Math.max(80, x - 100),
+            minX: Math.max(
+                80,
+                x - 100
+            ),
 
-            maxX: Math.min(760, x + 100),
+            maxX: Math.min(
+                760,
+                x + 100
+            ),
 
             y: 360,
 
@@ -873,10 +498,15 @@ function generateLevel(level) {
             height: 25,
 
             direction:
-                Math.random() > 0.5 ? 1 : -1,
+                Math.random() > 0.5
+                    ? 1
+                    : -1,
 
             speed:
-                settings.trapSpeed * randomFloat(0.7, 1.1)
+                settings.trapSpeed *
+                randomFloat(70, 110),
+
+            rotation: 0
 
         };
 
@@ -884,13 +514,13 @@ function generateLevel(level) {
             movingSpike
         );
 
-        occupied.push(movingSpike);
+        occupied.push(
+            movingSpike
+        );
     }
 
 
-    // -------------------------------------------------
-    // FIRE
-    // -------------------------------------------------
+    /* FIRE */
 
     for (
         let i = 0;
@@ -899,11 +529,15 @@ function generateLevel(level) {
     ) {
 
         const x =
-            safeX(occupied, 220, 740);
+            safeX(
+                occupied,
+                220,
+                740
+            );
 
         const fire = {
 
-            x: x,
+            x,
 
             y: 410,
 
@@ -911,7 +545,10 @@ function generateLevel(level) {
 
             height: 40,
 
-            active: true
+            active: true,
+
+            animation:
+                randomFloat(0, Math.PI * 2)
 
         };
 
@@ -921,9 +558,7 @@ function generateLevel(level) {
     }
 
 
-    // -------------------------------------------------
-    // FALLING ROCKS
-    // -------------------------------------------------
+    /* ROCKS */
 
     for (
         let i = 0;
@@ -932,11 +567,15 @@ function generateLevel(level) {
     ) {
 
         const x =
-            safeX(occupied, 180, 760);
+            safeX(
+                occupied,
+                180,
+                760
+            );
 
         const rock = {
 
-            x: x,
+            x,
 
             y: -random(100, 500),
 
@@ -945,8 +584,14 @@ function generateLevel(level) {
             height: 30,
 
             velocityY:
-                randomFloat(2, 4) *
+                randomFloat(120, 220) *
                 settings.trapSpeed,
+
+            rotation:
+                randomFloat(0, Math.PI * 2),
+
+            rotationSpeed:
+                randomFloat(-3, 3),
 
             resetY:
                 -random(100, 500)
@@ -959,9 +604,7 @@ function generateLevel(level) {
     }
 
 
-    // -------------------------------------------------
-    // KEYS
-    // -------------------------------------------------
+    /* KEYS */
 
     for (
         let i = 0;
@@ -972,7 +615,11 @@ function generateLevel(level) {
         const key = {
 
             x:
-                safeX(occupied, 150, 760),
+                safeX(
+                    occupied,
+                    150,
+                    760
+                ),
 
             y:
                 random(300, 390),
@@ -981,7 +628,10 @@ function generateLevel(level) {
 
             height: 20,
 
-            collected: false
+            collected: false,
+
+            animation:
+                randomFloat(0, Math.PI * 2)
 
         };
 
@@ -991,9 +641,7 @@ function generateLevel(level) {
     }
 
 
-    // -------------------------------------------------
-    // COINS
-    // -------------------------------------------------
+    /* COINS */
 
     const coinCount =
         Math.min(
@@ -1016,16 +664,15 @@ function generateLevel(level) {
 
             radius: 8,
 
-            collected: false
+            collected: false,
+
+            animation:
+                randomFloat(0, Math.PI * 2)
 
         });
 
     }
 
-
-    // -------------------------------------------------
-    // TIMER
-    // -------------------------------------------------
 
     timeLimit =
         settings.timer;
@@ -1038,44 +685,73 @@ function generateLevel(level) {
 }
 
 
-// =====================================================
-// START LEVEL
-// =====================================================
+/* =========================================================
+   START LEVEL
+========================================================= */
 
 function startLevel() {
 
     levelData =
-        generateLevel(currentLevel);
+        generateLevel(
+            currentLevel
+        );
 
     resetPlayer();
 
+    buttonPressed = 0;
+
+    collectedKeys = 0;
+
+    levelDamaged = false;
+
+    damageCooldown = 0;
+
+    paused = false;
+
     gameRunning = true;
 
+    levelTransition = 0;
+
     hideMessage();
+
+    hidePause();
 
     updateUI();
 }
 
 
-// =====================================================
-// RESET PLAYER
-// =====================================================
+/* =========================================================
+   RESET PLAYER
+========================================================= */
 
 function resetPlayer() {
 
     player.x = 60;
-    player.y = 380;
+
+    player.y =
+        WORLD.groundY -
+        player.height;
 
     player.velocityX = 0;
+
     player.velocityY = 0;
 
-    player.onGround = false;
+    player.onGround = true;
+
+    player.coyoteTimer =
+        PHYSICS.coyoteTime;
+
+    player.jumpBufferTimer = 0;
+
+    player.invincible = 0;
+
+    player.state = "idle";
 }
 
 
-// =====================================================
-// UI
-// =====================================================
+/* =========================================================
+   UI
+========================================================= */
 
 function updateUI() {
 
@@ -1101,155 +777,263 @@ function updateUI() {
 }
 
 
-// =====================================================
-// INPUT
-// =====================================================
+/* =========================================================
+   INPUT
+========================================================= */
 
-function handleInput() {
+function requestJump() {
 
-    player.velocityX = 0;
+    player.jumpBufferTimer =
+        PHYSICS.jumpBufferTime;
+}
 
 
-    if (
+function handleInput(dt) {
+
+    const movingLeft =
         keys["ArrowLeft"] ||
-        keys["a"]
-    ) {
+        keys["a"] ||
+        keys["A"];
 
-        player.velocityX =
-            -player.speed;
-    }
-
-
-    if (
+    const movingRight =
         keys["ArrowRight"] ||
-        keys["d"]
+        keys["d"] ||
+        keys["D"];
+
+
+    if (movingLeft) {
+
+        player.velocityX -=
+            PHYSICS.acceleration * dt;
+
+        player.facing = -1;
+
+    } else if (movingRight) {
+
+        player.velocityX +=
+            PHYSICS.acceleration * dt;
+
+        player.facing = 1;
+
+    } else {
+
+        if (player.velocityX > 0) {
+
+            player.velocityX = Math.max(
+                0,
+                player.velocityX -
+                PHYSICS.friction * dt
+            );
+
+        } else if (player.velocityX < 0) {
+
+            player.velocityX = Math.min(
+                0,
+                player.velocityX +
+                PHYSICS.friction * dt
+            );
+        }
+    }
+
+
+    player.velocityX =
+        Math.max(
+            -PHYSICS.moveSpeed,
+            Math.min(
+                PHYSICS.moveSpeed,
+                player.velocityX
+            )
+        );
+
+
+    if (
+        keys["ArrowUp"] ||
+        keys["w"] ||
+        keys["W"] ||
+        keys[" "]
     ) {
 
-        player.velocityX =
-            player.speed;
+        requestJump();
+
+        keys["ArrowUp"] = false;
+        keys["w"] = false;
+        keys["W"] = false;
+        keys[" "] = false;
+    }
+
+
+    if (player.jumpBufferTimer > 0) {
+
+        player.jumpBufferTimer -= dt;
     }
 
 
     if (
+        player.jumpBufferTimer > 0 &&
         (
-            keys["ArrowUp"] ||
-            keys["w"] ||
-            keys[" "]
-        ) &&
-        player.onGround
+            player.onGround ||
+            player.coyoteTimer > 0
+        )
     ) {
 
         player.velocityY =
-            player.jumpPower;
+            -PHYSICS.jumpPower;
 
         player.onGround = false;
+
+        player.coyoteTimer = 0;
+
+        player.jumpBufferTimer = 0;
     }
 }
 
 
-// =====================================================
-// PLAYER UPDATE
-// =====================================================
+/* =========================================================
+   PLAYER UPDATE
+========================================================= */
 
-function updatePlayer() {
+function updatePlayer(dt) {
 
-    handleInput();
-
-    player.velocityY += gravity;
-
-    player.x += player.velocityX;
-
-    player.y += player.velocityY;
+    handleInput(dt);
 
 
-    if (player.x < 20) {
+    if (!player.onGround) {
 
-        player.x = 20;
+        player.velocityY +=
+            PHYSICS.gravity * dt;
+
+        player.velocityY =
+            Math.min(
+                player.velocityY,
+                PHYSICS.maxFallSpeed
+            );
+
+        player.coyoteTimer =
+            Math.max(
+                0,
+                player.coyoteTimer - dt
+            );
+
+    } else {
+
+        player.coyoteTimer =
+            PHYSICS.coyoteTime;
+
+        player.velocityY = 0;
+    }
+
+
+    player.x +=
+        player.velocityX * dt;
+
+    player.y +=
+        player.velocityY * dt;
+
+
+    /* Walls */
+
+    if (player.x < WORLD.leftWall) {
+
+        player.x =
+            WORLD.leftWall;
     }
 
 
     if (
         player.x + player.width >
-        canvas.width - 20
+        WORLD.rightWall
     ) {
 
         player.x =
-            canvas.width -
-            20 -
+            WORLD.rightWall -
             player.width;
     }
 
 
+    /* Ground */
+
     if (
         player.y +
         player.height >=
-        groundY
+        WORLD.groundY
     ) {
 
         player.y =
-            groundY -
+            WORLD.groundY -
             player.height;
 
         player.velocityY = 0;
 
         player.onGround = true;
+
+    } else {
+
+        player.onGround = false;
+    }
+
+
+    /* Animation */
+
+    player.animationTime += dt;
+
+
+    if (!player.onGround) {
+
+        player.state =
+            player.velocityY < 0
+                ? "jump"
+                : "fall";
+
+    } else if (
+        Math.abs(player.velocityX) > 30
+    ) {
+
+        player.state = "run";
+
+    } else {
+
+        player.state = "idle";
     }
 }
 
 
-// =====================================================
-// BUTTONS
-// =====================================================
+/* =========================================================
+   BUTTONS
+========================================================= */
 
-function updateButtons() {
+function updateButtons(dt) {
 
     for (
         const button of levelData.buttons
     ) {
 
+        button.pulse += dt;
+
         if (
             !button.pressed &&
-            isColliding(player, button)
+            collidesWithPlayer(button)
         ) {
 
             button.pressed = true;
 
             buttonPressed++;
+
+            createParticles(
+                button.x + button.width / 2,
+                button.y,
+                12,
+                "#22c55e"
+            );
         }
     }
 }
 
 
-// =====================================================
-// SPIKES
-// =====================================================
+/* =========================================================
+   MOVING SPIKES
+========================================================= */
 
-function checkSpikes() {
-
-    for (
-        const spike of levelData.spikes
-    ) {
-
-        if (
-            spike.active &&
-            isColliding(player, spike)
-        ) {
-
-            loseLife();
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-// =====================================================
-// MOVING SPIKES
-// =====================================================
-
-function updateMovingSpikes() {
+function updateMovingSpikes(dt) {
 
     for (
         const spike of levelData.movingSpikes
@@ -1257,12 +1041,19 @@ function updateMovingSpikes() {
 
         spike.x +=
             spike.direction *
-            spike.speed;
+            spike.speed *
+            dt;
+
+        spike.rotation +=
+            dt * 2;
 
 
         if (
             spike.x <= spike.minX
         ) {
+
+            spike.x =
+                spike.minX;
 
             spike.direction = 1;
         }
@@ -1272,108 +1063,69 @@ function updateMovingSpikes() {
             spike.x >= spike.maxX
         ) {
 
+            spike.x =
+                spike.maxX;
+
             spike.direction = -1;
         }
     }
 }
 
 
-function checkMovingSpikes() {
+/* =========================================================
+   ROCKS
+========================================================= */
 
-    for (
-        const spike of levelData.movingSpikes
-    ) {
-
-        if (
-            isColliding(player, spike)
-        ) {
-
-            loseLife();
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-// =====================================================
-// FIRE
-// =====================================================
-
-function checkFire() {
-
-    for (
-        const fire of levelData.fire
-    ) {
-
-        if (
-            fire.active &&
-            isColliding(player, fire)
-        ) {
-
-            loseLife();
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-// =====================================================
-// ROCKS
-// =====================================================
-
-function updateRocks() {
+function updateRocks(dt) {
 
     for (
         const rock of levelData.rocks
     ) {
 
         rock.y +=
-            rock.velocityY;
+            rock.velocityY * dt;
+
+        rock.rotation +=
+            rock.rotationSpeed * dt;
 
 
         if (
-            rock.y > canvas.height
+            rock.y >
+            canvas.height
         ) {
 
             rock.y =
                 rock.resetY;
 
             rock.x =
-                random(100, 780);
+                random(
+                    100,
+                    780
+                );
         }
     }
 }
 
 
-function checkRocks() {
+/* =========================================================
+   FIRE ANIMATION
+========================================================= */
+
+function updateFire(dt) {
 
     for (
-        const rock of levelData.rocks
+        const fire of levelData.fire
     ) {
 
-        if (
-            isColliding(player, rock)
-        ) {
-
-            loseLife();
-
-            return true;
-        }
+        fire.animation +=
+            dt * 8;
     }
-
-    return false;
 }
 
 
-// =====================================================
-// KEYS
-// =====================================================
+/* =========================================================
+   KEYS
+========================================================= */
 
 function checkKeys() {
 
@@ -1386,8 +1138,12 @@ function checkKeys() {
         }
 
 
+        key.animation +=
+            0.08;
+
+
         if (
-            isColliding(player, key)
+            collidesWithPlayer(key)
         ) {
 
             key.collected = true;
@@ -1396,15 +1152,22 @@ function checkKeys() {
 
             score += 25;
 
+            createParticles(
+                key.x,
+                key.y,
+                15,
+                "#facc15"
+            );
+
             updateUI();
         }
     }
 }
 
 
-// =====================================================
-// COINS
-// =====================================================
+/* =========================================================
+   COINS
+========================================================= */
 
 function checkCoins() {
 
@@ -1415,6 +1178,10 @@ function checkCoins() {
         if (coin.collected) {
             continue;
         }
+
+
+        coin.animation +=
+            0.08;
 
 
         const dx =
@@ -1441,15 +1208,99 @@ function checkCoins() {
 
             score += 10;
 
+            createParticles(
+                coin.x,
+                coin.y,
+                10,
+                "#facc15"
+            );
+
             updateUI();
         }
     }
 }
 
 
-// =====================================================
-// EXIT
-// =====================================================
+/* =========================================================
+   TRAP COLLISIONS
+========================================================= */
+
+function checkTraps() {
+
+    if (player.invincible > 0) {
+        return false;
+    }
+
+
+    for (
+        const spike of levelData.spikes
+    ) {
+
+        if (
+            spike.active &&
+            collidesWithPlayer(spike)
+        ) {
+
+            loseLife();
+
+            return true;
+        }
+    }
+
+
+    for (
+        const spike of levelData.movingSpikes
+    ) {
+
+        if (
+            collidesWithPlayer(spike)
+        ) {
+
+            loseLife();
+
+            return true;
+        }
+    }
+
+
+    for (
+        const fire of levelData.fire
+    ) {
+
+        if (
+            fire.active &&
+            collidesWithPlayer(fire)
+        ) {
+
+            loseLife();
+
+            return true;
+        }
+    }
+
+
+    for (
+        const rock of levelData.rocks
+    ) {
+
+        if (
+            collidesWithPlayer(rock)
+        ) {
+
+            loseLife();
+
+            return true;
+        }
+    }
+
+
+    return false;
+}
+
+
+/* =========================================================
+   EXIT
+========================================================= */
 
 function exitUnlocked() {
 
@@ -1457,13 +1308,15 @@ function exitUnlocked() {
         buttonPressed >=
         levelData.buttons.length;
 
-
     const allKeys =
         collectedKeys >=
         levelData.keys.length;
 
 
-    return allButtons && allKeys;
+    return (
+        allButtons &&
+        allKeys
+    );
 }
 
 
@@ -1475,8 +1328,7 @@ function checkExit() {
 
 
     if (
-        isColliding(
-            player,
+        collidesWithPlayer(
             levelData.exit
         )
     ) {
@@ -1486,40 +1338,70 @@ function checkExit() {
 }
 
 
-// =====================================================
-// TIMER
-// =====================================================
+/* =========================================================
+   TIMER
+========================================================= */
 
 function checkTimer(now) {
 
-    if (timeLimit <= 0) {
+    if (
+        timeLimit <= 0
+    ) {
         return;
     }
 
 
     const elapsed =
-        (now - levelStartTime) / 1000;
+        (now - levelStartTime) /
+        1000;
 
 
-    if (elapsed >= timeLimit) {
+    if (
+        elapsed >=
+        timeLimit
+    ) {
 
         loseLife();
     }
 }
 
 
-// =====================================================
-// LOSE LIFE
-// =====================================================
+/* =========================================================
+   DAMAGE
+========================================================= */
 
 function loseLife() {
 
-    if (!gameRunning) {
+    if (
+        !gameRunning ||
+        paused ||
+        player.invincible > 0
+    ) {
         return;
     }
 
 
     lives--;
+
+    levelDamaged = true;
+
+    player.invincible = 1.2;
+
+    screenShake = 14;
+
+
+    createParticles(
+        player.x +
+        player.width / 2,
+
+        player.y +
+        player.height / 2,
+
+        20,
+
+        "#ef4444"
+    );
+
 
     updateUI();
 
@@ -1528,63 +1410,167 @@ function loseLife() {
 
         gameRunning = false;
 
-
         showMessage(
             "GAME OVER",
             `You reached Level ${currentLevel}. Score: ${score}`,
-            "Play Again"
+            "Play Again",
+            "💀",
+            "☆☆☆"
         );
 
         return;
     }
 
 
-    // Reset current room
+    setTimeout(() => {
 
-    levelData =
-        generateLevel(currentLevel);
+        if (!gameRunning) {
+            return;
+        }
 
-    resetPlayer();
+        levelData =
+            generateLevel(
+                currentLevel
+            );
+
+        buttonPressed = 0;
+
+        collectedKeys = 0;
+
+        resetPlayer();
+
+    }, 150);
 }
 
 
-// =====================================================
-// COMPLETE LEVEL
-// =====================================================
+/* =========================================================
+   LEVEL COMPLETE
+========================================================= */
+
+function calculateStars() {
+
+    let stars = 3;
+
+
+    if (levelDamaged) {
+        stars--;
+    }
+
+
+    if (
+        timeLimit > 0
+    ) {
+
+        const elapsed =
+            (performance.now() -
+                levelStartTime) /
+            1000;
+
+        const remaining =
+            timeLimit -
+            elapsed;
+
+
+        if (
+            remaining <
+            timeLimit * 0.2
+        ) {
+
+            stars--;
+        }
+    }
+
+
+    return Math.max(
+        1,
+        stars
+    );
+}
+
 
 function completeLevel() {
 
-    score +=
+    if (!gameRunning) {
+        return;
+    }
+
+
+    gameRunning = false;
+
+
+    const stars =
+        calculateStars();
+
+
+    const levelBonus =
         currentLevel * 100;
 
 
-    currentLevel++;
+    const coinBonus =
+        levelData.coins.filter(
+            coin => coin.collected
+        ).length * 10;
 
 
-    collectedKeys = 0;
+    const starBonus =
+        stars * 50;
 
 
-    // Every level gets harder
+    score +=
+        levelBonus +
+        coinBonus +
+        starBonus;
 
-    levelData =
-        generateLevel(currentLevel);
+
+    const starText =
+        "★".repeat(stars) +
+        "☆".repeat(
+            3 - stars
+        );
 
 
-    resetPlayer();
-
-    updateUI();
+    showMessage(
+        "LEVEL COMPLETE!",
+        `Level ${currentLevel} cleared! Bonus: +${levelBonus + coinBonus + starBonus}`,
+        "Next Level",
+        "🏆",
+        starText
+    );
 }
 
 
-// =====================================================
-// MESSAGE
-// =====================================================
+/* =========================================================
+   NEXT LEVEL
+========================================================= */
+
+function nextLevel() {
+
+    currentLevel++;
+
+    buttonPressed = 0;
+
+    collectedKeys = 0;
+
+    levelDamaged = false;
+
+    startLevel();
+}
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
 
 function showMessage(
     title,
     text,
-    buttonText
+    buttonText,
+    icon = "⚠️",
+    stars = "☆☆☆"
 ) {
+
+    messageIcon.textContent =
+        icon;
 
     messageTitle.textContent =
         title;
@@ -1592,8 +1578,12 @@ function showMessage(
     messageText.textContent =
         text;
 
+    messageStars.textContent =
+        stars;
+
     actionButton.textContent =
         buttonText;
+
 
     message.classList.remove(
         "hidden"
@@ -1609,14 +1599,216 @@ function hideMessage() {
 }
 
 
-// =====================================================
-// DRAW BACKGROUND
-// =====================================================
+/* =========================================================
+   PAUSE
+========================================================= */
+
+function togglePause() {
+
+    if (
+        !gameRunning
+    ) {
+        return;
+    }
+
+
+    paused =
+        !paused;
+
+
+    if (paused) {
+
+        pauseOverlay.classList.remove(
+            "hidden"
+        );
+
+    } else {
+
+        hidePause();
+
+        lastTime =
+            performance.now();
+    }
+}
+
+
+function hidePause() {
+
+    pauseOverlay.classList.add(
+        "hidden"
+    );
+}
+
+
+resumeButton.addEventListener(
+    "click",
+    () => {
+
+        if (paused) {
+            togglePause();
+        }
+
+    }
+);
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+const particles = [];
+
+
+function createParticles(
+    x,
+    y,
+    count,
+    color
+) {
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        particles.push({
+
+            x,
+
+            y,
+
+            velocityX:
+                randomFloat(
+                    -160,
+                    160
+                ),
+
+            velocityY:
+                randomFloat(
+                    -220,
+                    -50
+                ),
+
+            life: 1,
+
+            size:
+                randomFloat(
+                    2,
+                    5
+                ),
+
+            color
+        });
+    }
+}
+
+
+function updateParticles(dt) {
+
+    for (
+        let i =
+            particles.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const particle =
+            particles[i];
+
+
+        particle.x +=
+            particle.velocityX *
+            dt;
+
+        particle.y +=
+            particle.velocityY *
+            dt;
+
+
+        particle.velocityY +=
+            500 * dt;
+
+
+        particle.life -=
+            dt * 1.5;
+
+
+        if (
+            particle.life <= 0
+        ) {
+
+            particles.splice(
+                i,
+                1
+            );
+        }
+    }
+}
+
+
+function drawParticles() {
+
+    for (
+        const particle of particles
+    ) {
+
+        ctx.save();
+
+        ctx.globalAlpha =
+            Math.max(
+                0,
+                particle.life
+            );
+
+        ctx.fillStyle =
+            particle.color;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            particle.x,
+            particle.y,
+            particle.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+
+        ctx.restore();
+    }
+}
+
+
+/* =========================================================
+   BACKGROUND
+========================================================= */
 
 function drawBackground() {
 
+    const gradient =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            canvas.height
+        );
+
+
+    gradient.addColorStop(
+        0,
+        "#dbeafe"
+    );
+
+    gradient.addColorStop(
+        1,
+        "#bfdbfe"
+    );
+
+
     ctx.fillStyle =
-        "#dbeafe";
+        gradient;
 
     ctx.fillRect(
         0,
@@ -1625,6 +1817,8 @@ function drawBackground() {
         canvas.height
     );
 
+
+    /* Top wall */
 
     ctx.fillStyle =
         "#cbd5e1";
@@ -1636,6 +1830,8 @@ function drawBackground() {
         25
     );
 
+
+    /* Side walls */
 
     ctx.fillStyle =
         "#94a3b8";
@@ -1653,12 +1849,64 @@ function drawBackground() {
         20,
         425
     );
+
+
+    /* Background panels */
+
+    ctx.strokeStyle =
+        "rgba(100,116,139,0.15)";
+
+    ctx.lineWidth = 1;
+
+
+    for (
+        let x = 20;
+        x < canvas.width - 20;
+        x += 60
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            25
+        );
+
+        ctx.lineTo(
+            x,
+            450
+        );
+
+        ctx.stroke();
+    }
+
+
+    for (
+        let y = 80;
+        y < 450;
+        y += 60
+    ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            20,
+            y
+        );
+
+        ctx.lineTo(
+            880,
+            y
+        );
+
+        ctx.stroke();
+    }
 }
 
 
-// =====================================================
-// GROUND
-// =====================================================
+/* =========================================================
+   GROUND
+========================================================= */
 
 function drawGround() {
 
@@ -1667,7 +1915,7 @@ function drawGround() {
 
     ctx.fillRect(
         0,
-        groundY,
+        WORLD.groundY,
         canvas.width,
         50
     );
@@ -1685,23 +1933,92 @@ function drawGround() {
 
         ctx.fillRect(
             x,
-            groundY,
+            WORLD.groundY,
             2,
             50
         );
     }
+
+
+    ctx.fillStyle =
+        "#111827";
+
+    ctx.fillRect(
+        0,
+        WORLD.groundY,
+        canvas.width,
+        5
+    );
 }
 
 
-// =====================================================
-// PLAYER
-// =====================================================
+/* =========================================================
+   PLAYER DRAW
+========================================================= */
 
 function drawPlayer() {
+
+    if (
+        player.invincible > 0 &&
+        Math.floor(
+            player.invincible * 12
+        ) % 2 === 0
+    ) {
+
+        return;
+    }
+
 
     const centerX =
         player.x +
         player.width / 2;
+
+
+    const headY =
+        player.y + 10;
+
+
+    let legOffset = 0;
+    let armOffset = 0;
+
+
+    if (
+        player.state === "run"
+    ) {
+
+        const animation =
+            Math.sin(
+                player.animationTime *
+                14
+            );
+
+        legOffset =
+            animation * 6;
+
+        armOffset =
+            animation * 5;
+    }
+
+
+    if (
+        player.state === "jump"
+    ) {
+
+        legOffset = -3;
+        armOffset = 5;
+    }
+
+
+    if (
+        player.state === "fall"
+    ) {
+
+        legOffset = 4;
+        armOffset = -4;
+    }
+
+
+    ctx.save();
 
 
     ctx.strokeStyle =
@@ -1716,13 +2033,13 @@ function drawPlayer() {
         "round";
 
 
-    // Head
+    /* Head */
 
     ctx.beginPath();
 
     ctx.arc(
         centerX,
-        player.y + 10,
+        headY,
         9,
         0,
         Math.PI * 2
@@ -1731,7 +2048,7 @@ function drawPlayer() {
     ctx.fill();
 
 
-    // Body
+    /* Body */
 
     ctx.beginPath();
 
@@ -1748,7 +2065,7 @@ function drawPlayer() {
     ctx.stroke();
 
 
-    // Arms
+    /* Arms */
 
     ctx.beginPath();
 
@@ -1759,7 +2076,8 @@ function drawPlayer() {
 
     ctx.lineTo(
         centerX - 15,
-        player.y + 35
+        player.y + 35 +
+        armOffset
     );
 
 
@@ -1770,13 +2088,14 @@ function drawPlayer() {
 
     ctx.lineTo(
         centerX + 15,
-        player.y + 35
+        player.y + 35 -
+        armOffset
     );
 
     ctx.stroke();
 
 
-    // Legs
+    /* Legs */
 
     ctx.beginPath();
 
@@ -1787,7 +2106,8 @@ function drawPlayer() {
 
     ctx.lineTo(
         centerX - 12,
-        player.y + 58
+        player.y + 58 +
+        legOffset
     );
 
 
@@ -1798,22 +2118,22 @@ function drawPlayer() {
 
     ctx.lineTo(
         centerX + 12,
-        player.y + 58
+        player.y + 58 -
+        legOffset
     );
 
     ctx.stroke();
+
+
+    ctx.restore();
 }
 
 
-// =====================================================
-// SPIKES DRAW
-// =====================================================
+/* =========================================================
+   SPIKES
+========================================================= */
 
 function drawSpikes() {
-
-    ctx.fillStyle =
-        "#dc2626";
-
 
     for (
         const spike of levelData.spikes
@@ -1825,8 +2145,11 @@ function drawSpikes() {
 
 
         const count =
-            Math.floor(
-                spike.width / 20
+            Math.max(
+                1,
+                Math.floor(
+                    spike.width / 20
+                )
             );
 
 
@@ -1841,11 +2164,16 @@ function drawSpikes() {
                 i * 20;
 
 
+            ctx.fillStyle =
+                "#dc2626";
+
+
             ctx.beginPath();
 
             ctx.moveTo(
                 x,
-                spike.y + spike.height
+                spike.y +
+                spike.height
             );
 
             ctx.lineTo(
@@ -1855,7 +2183,8 @@ function drawSpikes() {
 
             ctx.lineTo(
                 x + 20,
-                spike.y + spike.height
+                spike.y +
+                spike.height
             );
 
             ctx.closePath();
@@ -1866,47 +2195,66 @@ function drawSpikes() {
 }
 
 
-// =====================================================
-// MOVING SPIKES DRAW
-// =====================================================
+/* =========================================================
+   MOVING SPIKES
+========================================================= */
 
 function drawMovingSpikes() {
-
-    ctx.fillStyle =
-        "#991b1b";
-
 
     for (
         const spike of levelData.movingSpikes
     ) {
 
+        ctx.save();
+
+        ctx.translate(
+            spike.x +
+            spike.width / 2,
+
+            spike.y +
+            spike.height / 2
+        );
+
+        ctx.rotate(
+            Math.sin(
+                spike.rotation
+            ) * 0.05
+        );
+
+
+        ctx.fillStyle =
+            "#991b1b";
+
+
         ctx.beginPath();
 
         ctx.moveTo(
-            spike.x,
-            spike.y + spike.height
+            -spike.width / 2,
+            spike.height / 2
         );
 
         ctx.lineTo(
-            spike.x + spike.width / 2,
-            spike.y
+            0,
+            -spike.height / 2
         );
 
         ctx.lineTo(
-            spike.x + spike.width,
-            spike.y + spike.height
+            spike.width / 2,
+            spike.height / 2
         );
 
         ctx.closePath();
 
         ctx.fill();
+
+        ctx.restore();
     }
 }
 
 
-// =====================================================
-// FIRE DRAW
-// =====================================================
+/* =========================================================
+   FIRE
+========================================================= */
 
 function drawFire() {
 
@@ -1914,68 +2262,205 @@ function drawFire() {
         const fire of levelData.fire
     ) {
 
+        const flicker =
+            Math.sin(
+                fire.animation
+            ) * 4;
+
+
+        ctx.save();
+
+
+        ctx.shadowColor =
+            "rgba(249,115,22,0.7)";
+
+        ctx.shadowBlur = 15;
+
+
         ctx.fillStyle =
             "#f97316";
 
+
         ctx.fillRect(
             fire.x,
-            fire.y,
+            fire.y + 10,
             fire.width,
-            fire.height
+            fire.height - 10
         );
 
 
-        ctx.fillStyle =
-            "#facc15";
+        ctx.shadowBlur = 0;
 
-        ctx.fillRect(
-            fire.x + 8,
-            fire.y + 8,
-            fire.width - 16,
-            fire.height - 8
-        );
+
+        const flameCount =
+            Math.max(
+                2,
+                Math.floor(
+                    fire.width / 15
+                )
+            );
+
+
+        for (
+            let i = 0;
+            i < flameCount;
+            i++
+        ) {
+
+            const x =
+                fire.x +
+                i *
+                (fire.width /
+                    flameCount) +
+                5;
+
+
+            ctx.fillStyle =
+                i % 2 === 0
+                    ? "#facc15"
+                    : "#fb923c";
+
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x - 6,
+                fire.y + 25
+            );
+
+            ctx.quadraticCurveTo(
+                x - 3,
+                fire.y +
+                5 +
+                flicker,
+                x,
+                fire.y -
+                5 +
+                flicker
+            );
+
+            ctx.quadraticCurveTo(
+                x + 8,
+                fire.y +
+                8,
+                x + 7,
+                fire.y + 25
+            );
+
+            ctx.closePath();
+
+            ctx.fill();
+        }
+
+
+        ctx.restore();
     }
 }
 
 
-// =====================================================
-// ROCK DRAW
-// =====================================================
+/* =========================================================
+   ROCKS
+========================================================= */
 
 function drawRocks() {
-
-    ctx.fillStyle =
-        "#4b5563";
-
 
     for (
         const rock of levelData.rocks
     ) {
 
-        ctx.beginPath();
+        ctx.save();
 
-        ctx.arc(
+        ctx.translate(
             rock.x + 15,
-            rock.y + 15,
-            15,
-            0,
-            Math.PI * 2
+            rock.y + 15
         );
 
+        ctx.rotate(
+            rock.rotation
+        );
+
+
+        ctx.fillStyle =
+            "#4b5563";
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            -15,
+            -5
+        );
+
+        ctx.lineTo(
+            -8,
+            -15
+        );
+
+        ctx.lineTo(
+            7,
+            -12
+        );
+
+        ctx.lineTo(
+            15,
+            -2
+        );
+
+        ctx.lineTo(
+            10,
+            12
+        );
+
+        ctx.lineTo(
+            -8,
+            15
+        );
+
+        ctx.closePath();
+
         ctx.fill();
+
+
+        ctx.strokeStyle =
+            "#1f2937";
+
+        ctx.stroke();
+
+
+        ctx.restore();
     }
 }
 
 
-// =====================================================
-// BUTTON DRAW
-// =====================================================
+/* =========================================================
+   BUTTONS
+========================================================= */
 
 function drawButtons() {
 
     for (
         const button of levelData.buttons
     ) {
+
+        const pulse =
+            Math.sin(
+                button.pulse * 5
+            ) * 2;
+
+
+        ctx.save();
+
+
+        ctx.shadowColor =
+            button.pressed
+                ? "#22c55e"
+                : "#ef4444";
+
+        ctx.shadowBlur =
+            button.pressed
+                ? 10
+                : 5;
+
 
         ctx.fillStyle =
             button.pressed
@@ -1985,17 +2470,23 @@ function drawButtons() {
 
         ctx.fillRect(
             button.x,
-            button.y,
+            button.y -
+            (button.pressed
+                ? 0
+                : Math.max(0, pulse)),
             button.width,
             button.height
         );
+
+
+        ctx.restore();
     }
 }
 
 
-// =====================================================
-// KEY DRAW
-// =====================================================
+/* =========================================================
+   KEYS
+========================================================= */
 
 function drawKeys() {
 
@@ -2008,36 +2499,88 @@ function drawKeys() {
         }
 
 
-        ctx.fillStyle =
-            "#facc15";
+        const floatY =
+            Math.sin(
+                key.animation
+            ) * 4;
+
+
+        ctx.save();
+
+        ctx.translate(
+            key.x,
+            key.y + floatY
+        );
+
+        ctx.rotate(
+            Math.sin(
+                key.animation
+            ) * 0.1
+        );
+
+
+        ctx.strokeStyle =
+            "#ca8a04";
+
+        ctx.lineWidth = 4;
 
 
         ctx.beginPath();
 
         ctx.arc(
-            key.x + 7,
-            key.y + 10,
             7,
+            10,
+            6,
             0,
             Math.PI * 2
         );
 
-        ctx.fill();
+        ctx.stroke();
 
 
-        ctx.fillRect(
-            key.x + 12,
-            key.y + 8,
+        ctx.beginPath();
+
+        ctx.moveTo(
             12,
-            4
+            10
         );
+
+        ctx.lineTo(
+            24,
+            10
+        );
+
+        ctx.moveTo(
+            20,
+            10
+        );
+
+        ctx.lineTo(
+            20,
+            15
+        );
+
+        ctx.moveTo(
+            16,
+            10
+        );
+
+        ctx.lineTo(
+            16,
+            14
+        );
+
+        ctx.stroke();
+
+
+        ctx.restore();
     }
 }
 
 
-// =====================================================
-// COINS DRAW
-// =====================================================
+/* =========================================================
+   COINS
+========================================================= */
 
 function drawCoins() {
 
@@ -2050,18 +2593,41 @@ function drawCoins() {
         }
 
 
+        const scale =
+            0.7 +
+            Math.abs(
+                Math.sin(
+                    coin.animation
+                )
+            ) * 0.3;
+
+
+        ctx.save();
+
+        ctx.translate(
+            coin.x,
+            coin.y
+        );
+
+        ctx.scale(
+            scale,
+            1
+        );
+
+
+        ctx.fillStyle =
+            "#facc15";
+
+
         ctx.beginPath();
 
         ctx.arc(
-            coin.x,
-            coin.y,
+            0,
+            0,
             coin.radius,
             0,
             Math.PI * 2
         );
-
-        ctx.fillStyle =
-            "#facc15";
 
         ctx.fill();
 
@@ -2069,19 +2635,31 @@ function drawCoins() {
         ctx.strokeStyle =
             "#ca8a04";
 
+        ctx.lineWidth = 2;
+
         ctx.stroke();
+
+
+        ctx.restore();
     }
 }
 
 
-// =====================================================
-// EXIT DRAW
-// =====================================================
+/* =========================================================
+   EXIT
+========================================================= */
 
 function drawExit() {
 
     const unlocked =
         exitUnlocked();
+
+
+    const exit =
+        levelData.exit;
+
+
+    ctx.save();
 
 
     ctx.fillStyle =
@@ -2091,10 +2669,25 @@ function drawExit() {
 
 
     ctx.fillRect(
-        levelData.exit.x,
-        levelData.exit.y,
-        levelData.exit.width,
-        levelData.exit.height
+        exit.x,
+        exit.y,
+        exit.width,
+        exit.height
+    );
+
+
+    ctx.strokeStyle =
+        unlocked
+            ? "#86efac"
+            : "#94a3b8";
+
+    ctx.lineWidth = 3;
+
+    ctx.strokeRect(
+        exit.x,
+        exit.y,
+        exit.width,
+        exit.height
     );
 
 
@@ -2106,16 +2699,23 @@ function drawExit() {
 
 
     ctx.fillText(
-        unlocked ? "EXIT" : "LOCKED",
-        levelData.exit.x - 5,
-        levelData.exit.y - 10
+        unlocked
+            ? "EXIT"
+            : "LOCKED",
+
+        exit.x - 5,
+
+        exit.y - 10
     );
+
+
+    ctx.restore();
 }
 
 
-// =====================================================
-// LEVEL INFO
-// =====================================================
+/* =========================================================
+   LEVEL INFO
+========================================================= */
 
 function drawLevelInfo(now) {
 
@@ -2156,7 +2756,6 @@ function drawLevelInfo(now) {
 
         objective =
             "EXIT UNLOCKED - RUN!";
-
     }
 
 
@@ -2171,18 +2770,23 @@ function drawLevelInfo(now) {
     );
 
 
-    // Timer
+    /* Timer */
 
-    if (timeLimit > 0) {
+    if (
+        timeLimit > 0
+    ) {
 
         const elapsed =
-            (now - levelStartTime) / 1000;
+            (now - levelStartTime) /
+            1000;
+
 
         const remaining =
             Math.max(
                 0,
                 Math.ceil(
-                    timeLimit - elapsed
+                    timeLimit -
+                    elapsed
                 )
             );
 
@@ -2206,9 +2810,9 @@ function drawLevelInfo(now) {
 }
 
 
-// =====================================================
-// DRAW
-// =====================================================
+/* =========================================================
+   DRAW
+========================================================= */
 
 function draw(now) {
 
@@ -2218,6 +2822,24 @@ function draw(now) {
         canvas.width,
         canvas.height
     );
+
+
+    ctx.save();
+
+
+    if (screenShake > 0) {
+
+        ctx.translate(
+            randomFloat(
+                -screenShake,
+                screenShake
+            ),
+            randomFloat(
+                -screenShake,
+                screenShake
+            )
+        );
+    }
 
 
     drawBackground();
@@ -2242,48 +2864,79 @@ function draw(now) {
 
     drawExit();
 
+    drawParticles();
+
     drawPlayer();
+
+
+    ctx.restore();
 }
 
 
-// =====================================================
-// UPDATE
-// =====================================================
+/* =========================================================
+   UPDATE
+========================================================= */
 
-function update(now) {
+function update(
+    now,
+    dt
+) {
 
-    if (!gameRunning) {
+    if (
+        !gameRunning ||
+        paused
+    ) {
         return;
     }
 
 
-    updatePlayer();
-
-    updateButtons();
-
-    updateMovingSpikes();
-
-    updateRocks();
+    dt =
+        Math.min(
+            dt,
+            0.033
+        );
 
 
-    // Collision checks
+    if (
+        player.invincible > 0
+    ) {
 
-    if (checkSpikes()) {
-        return;
+        player.invincible =
+            Math.max(
+                0,
+                player.invincible -
+                dt
+            );
     }
 
 
-    if (checkMovingSpikes()) {
-        return;
+    if (
+        screenShake > 0
+    ) {
+
+        screenShake =
+            Math.max(
+                0,
+                screenShake -
+                dt * 35
+            );
     }
 
 
-    if (checkFire()) {
-        return;
-    }
+    updatePlayer(dt);
+
+    updateButtons(dt);
+
+    updateMovingSpikes(dt);
+
+    updateRocks(dt);
+
+    updateFire(dt);
+
+    updateParticles(dt);
 
 
-    if (checkRocks()) {
+    if (checkTraps()) {
         return;
     }
 
@@ -2298,15 +2951,33 @@ function update(now) {
 }
 
 
-// =====================================================
-// GAME LOOP
-// =====================================================
+/* =========================================================
+   GAME LOOP
+========================================================= */
 
 function gameLoop(now) {
 
-    update(now);
+    if (!lastTime) {
+        lastTime = now;
+    }
+
+
+    const dt =
+        (now - lastTime) /
+        1000;
+
+
+    lastTime = now;
+
+
+    update(
+        now,
+        dt
+    );
+
 
     draw(now);
+
 
     requestAnimationFrame(
         gameLoop
@@ -2314,20 +2985,21 @@ function gameLoop(now) {
 }
 
 
-// =====================================================
-// KEYBOARD
-// =====================================================
+/* =========================================================
+   KEYBOARD
+========================================================= */
 
 document.addEventListener(
     "keydown",
     (event) => {
 
-        keys[event.key] = true;
+        const key =
+            event.key;
 
 
         if (
-            event.key === " " ||
-            event.key.startsWith("Arrow")
+            key === " " ||
+            key.startsWith("Arrow")
         ) {
 
             event.preventDefault();
@@ -2335,11 +3007,29 @@ document.addEventListener(
 
 
         if (
-            event.key.toLowerCase() === "r"
+            key.toLowerCase() === "p" ||
+            key === "Escape"
         ) {
 
-            startLevel();
+            if (!event.repeat) {
+                togglePause();
+            }
+
+            return;
         }
+
+
+        if (
+            key.toLowerCase() === "r"
+        ) {
+
+            restartGame();
+
+            return;
+        }
+
+
+        keys[key] = true;
     }
 );
 
@@ -2353,60 +3043,58 @@ document.addEventListener(
 );
 
 
-// =====================================================
-// MOBILE CONTROLS
-// =====================================================
-
-const leftBtn =
-    document.getElementById("leftBtn");
-
-const rightBtn =
-    document.getElementById("rightBtn");
-
-const jumpBtn =
-    document.getElementById("jumpBtn");
-
+/* =========================================================
+   MOBILE CONTROLS
+========================================================= */
 
 function holdButton(
     button,
     key
 ) {
 
+    if (!button) {
+        return;
+    }
+
+
+    const start = (event) => {
+
+        event.preventDefault();
+
+        keys[key] = true;
+
+        button.setPointerCapture?.(
+            event.pointerId
+        );
+    };
+
+
+    const end = (event) => {
+
+        event.preventDefault();
+
+        keys[key] = false;
+    };
+
+
     button.addEventListener(
         "pointerdown",
-        (event) => {
-
-            event.preventDefault();
-
-            keys[key] = true;
-        }
+        start
     );
-
 
     button.addEventListener(
         "pointerup",
-        () => {
-
-            keys[key] = false;
-        }
+        end
     );
-
 
     button.addEventListener(
         "pointercancel",
-        () => {
-
-            keys[key] = false;
-        }
+        end
     );
-
 
     button.addEventListener(
         "pointerleave",
-        () => {
-
-            keys[key] = false;
-        }
+        end
     );
 }
 
@@ -2423,51 +3111,82 @@ holdButton(
 );
 
 
-jumpBtn.addEventListener(
-    "pointerdown",
-    (event) => {
+if (jumpBtn) {
 
-        event.preventDefault();
+    jumpBtn.addEventListener(
+        "pointerdown",
+        (event) => {
 
-        keys[" "] = true;
+            event.preventDefault();
 
-        setTimeout(() => {
-
-            keys[" "] = false;
-
-        }, 120);
-    }
-);
+            requestJump();
+        }
+    );
+}
 
 
-// =====================================================
-// RESTART
-// =====================================================
+/* =========================================================
+   RESTART GAME
+========================================================= */
+
+function restartGame() {
+
+    currentLevel = 1;
+
+    score = 0;
+
+    lives = 3;
+
+    buttonPressed = 0;
+
+    collectedKeys = 0;
+
+    levelDamaged = false;
+
+    paused = false;
+
+    gameRunning = true;
+
+    particles.length = 0;
+
+    hidePause();
+
+    startLevel();
+
+    updateUI();
+}
+
+
+/* =========================================================
+   ACTION BUTTON
+========================================================= */
 
 actionButton.addEventListener(
     "click",
     () => {
 
-        currentLevel = 1;
+        if (
+            messageTitle.textContent
+                .toUpperCase()
+                .includes("LEVEL COMPLETE")
+        ) {
 
-        score = 0;
+            nextLevel();
 
-        lives = 3;
+        } else {
 
-        collectedKeys = 0;
-
-        startLevel();
+            restartGame();
+        }
     }
 );
 
 
-// =====================================================
-// START
-// =====================================================
+/* =========================================================
+   INITIALIZE
+========================================================= */
 
 startLevel();
 
 requestAnimationFrame(
     gameLoop
 );
->>>>>>> 873b6dc (Initial Stickman Trap Room game)
